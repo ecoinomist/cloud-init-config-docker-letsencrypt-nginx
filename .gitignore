@@ -1,0 +1,186 @@
+# ==============================================================================
+# Repo specific
+# ==============================================================================
+
+
+# ==============================================================================
+# Development Files
+# ==============================================================================
+*.env
+
+
+# --------------------------------------
+# DOCKER DATA VOLUMES
+# --------------------------------------
+
+db/
+!config/db
+data/
+dbbackup/
+log/
+static/
+!static/robots.txt
+
+
+# --------------------------------------
+# CERTIFICATES
+# --------------------------------------
+
+*.crt
+*.csr
+*.key
+*.pem
+!config/certs/docker.crt
+!config/certs/localhost.crt
+!docker.csr
+!localhost.csr
+!config/certs/docker.key
+!config/certs/localhost.key
+!docker.pem
+!localhost.pem
+*certs/*.zip
+
+
+# --------------------------------------
+# EDITORS
+# --------------------------------------
+
+# Intellij IDEA
+.idea
+
+# Vim
+.ropeproject
+
+
+# --------------------------------------
+# FRONT END
+# --------------------------------------
+
+# NodeJS Modules
+node_modules
+
+
+# --------------------------------------
+# BACK END
+# --------------------------------------
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+develop-eggs/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# PyBuilder
+target/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Django stuff:
+*.log
+
+# Translations
+*.mo
+*.pot
+
+# Sphinx documentation
+docs/_build/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# --------------------------------------
+# Temporary Migration Files in Dev Mode
+# --------------------------------------
+# migrations
+
+
+# ==============================================================================
+# Operating System Files
+# ==============================================================================
+
+# --------------------------------------
+# WINDOWS
+# --------------------------------------
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows shortcuts
+*.lnk
+
+
+# --------------------------------------
+# OSX
+# --------------------------------------
+
+# System
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+Source/Application.h
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+

@@ -1,0 +1,164 @@
+#cloud-config
+# ^ the line above must be kept exactly as is
+# Digital Ocean droplet creation using User Data Cloud-Init for Ubuntu 16.04
+# ------------------------------------------------------------------------------
+# 1. Change '<user>' to your custom username, this is used for ssh login
+# 2. Change '<SSH_PORT>' to replace default SSH port 22
+# 3. Change '/1.16.1/' to desired docker-compose version
+# 4. Change 'example@gmail.com' to your git repo email address
+# 5. Change 'Full Name' to your git repo full name
+# 6. Update public key/s under `ssh-authorized-keys:` below
+# ------------------------------------------------------------------------------
+# To access the droplet, run:
+# $ ssh -i ~/.ssh/id_rsa <user>@<IP_ADDRESS> -p <SSH_PORT>
+# ------------------------------------------------------------------------------
+# Create new user with sudo privilege to replace root user login
+users:
+  - name: <user>
+    ssh-authorized-keys:
+      # public keys from SSH key files used to access the droplet
+      # To get the contents of your public key of your local computer, run:
+      # $ cat ~/.ssh/id_rsa.pub
+      - ssh-rsa xExamplePublicKeyCreatedFromYourComputer last@name.lan
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+
+write_files:
+  # Ubuntu 16.04 uses Systemd to launch services on boot
+  - path: /etc/systemd/system/startup.service
+  # content text must be indented
+    content: |
+      [Unit]
+      Description=run services defined in /startup.sh
+
+      [Service]
+      ExecStart=/startup.sh
+      Restart=always
+      RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+
+  # Docker command aliases
+  - path: /etc/skel/.bash_aliases
+    content: |
+      # Get latest container ID
+      alias dp="docker-compose"
+
+      # Get latest container ID
+      alias dl="docker ps -l -q"
+
+      # Get container process
+      alias dps="docker ps"
+
+      # Get process included stop container
+      alias dpa="docker ps -a"
+
+      # Get images
+      alias di="docker images"
+
+      # Get container IP
+      alias dip="docker inspect --format '{{ .NetworkSettings.IPAddress }}'"
+
+      # Run deamonized container, e.g., $dkd base /bin/echo hello
+      alias dkd="docker run -d -P"
+
+      # Run interactive container, e.g., $dki base /bin/bash
+      alias dki="docker run -i -t -P"
+
+      # Execute interactive container, e.g., $dex base /bin/bash
+      alias dex="docker exec -i -t"
+
+      # Stop all containers
+      dstop() { docker stop $(docker ps -a -q); }
+
+      # Remove all containers
+      drm() { docker rm $(docker ps -a -q); }
+
+      # Stop and Remove all containers
+      alias drmf='docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)'
+
+      # Remove all images
+      dri() { docker rmi $(docker images -q); }
+
+      # Dockerfile build, e.g., $dbu tcnksm/test
+      dbu() { docker build -t=$1 .; }
+
+      # Show all alias related docker
+      dalias() { alias | grep 'docker' | sed "s/^\([^=]*\)=\(.*\)/\1 => \2/"| sed "s/['|\']//g" | sort; }
+
+      # Bash into running container
+      dbash() { docker exec -it $(docker ps -aqf "name=$1") bash; }
+
+runcmd:
+  # Change default ssh port, disable root login and allow new user login
+  - sed -i -e '/^Port/s/^.*$/Port <SSH_PORT>/' /etc/ssh/sshd_config
+  - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+  - sed -i -e '$aAllowUsers <user>' /etc/ssh/sshd_config
+  - service ssh restart
+
+  # Update packages
+  - sudo apt-get update
+
+  # Startup services
+  # create empty `/startup.sh` file that will be executed on reboot or crash
+  # ssh into droplet later to define services to launch inside `/startup.sh`
+  # Note: `/startup.sh` must have `#!/bin/bash` declared at the top
+  - echo '#!/bin/bash' > /startup.sh
+  - chmod +x /startup.sh
+  # enable the service to start automatically at boot
+  - sudo systemctl enable startup.service
+  - sudo systemctl start startup.service
+  # check if it's running:
+  # $ sudo systemctl status startup.service
+  # To see all log entries, starting at the oldest entry, type:
+  # $ journalctl
+
+  # Ubuntu 16.04 has default UTC timezone
+  # Ubuntu 16.04 has time synchronization built in and activated by default using Timesyncd
+
+  # Ubuntu 16.04 has git installed by default
+  - sudo git config --add --system user.name "Full Name"
+  - sudo git config --add --system user.email "example@gmail.com"
+  # Add some SVN-like aliases
+  - sudo git config --add --system alias.st "status"
+  - sudo git config --add --system alias.ci "commit -m"
+  - sudo git config --add --system alias.amend "commit --amend"
+  - sudo git config --add --system alias.co "checkout"
+  - sudo git config --add --system alias.cp "cherry-pick"
+  - sudo git config --add --system alias.br "branch -avv"
+  - sudo git config --add --system alias.up "rebase"
+  - sudo git config --add --system alias.unstage "reset HEAD --"
+  - sudo git config --add --system alias.undo "reset --hard HEAD^1"
+  - sudo git config --add --system alias.last "log -1 HEAD"
+  - sudo git config --add --system alias.lg "log --graph --pretty=format:'%C(auto)%h -%d %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+  - sudo git config --add --system push.default "simple"
+
+  # Docker installation
+  - curl -sSL https://get.docker.com/ | sudo sh
+  - sudo usermod -aG docker <user>
+  - sudo service docker start
+  - curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+  - chmod +x /usr/local/bin/docker-compose
+  # Enable docker container networking under ufw firewall
+  - sed -i -e '/^DEFAULT_FORWARD_POLICY/s/^.*$/DEFAULT_FORWARD_POLICY="ACCEPT"/' /etc/default/ufw
+  # allow incoming connection from another docker host
+#  - sudo ufw allow 2375/tcp # default docker port
+#  - sudo ufw allow 2376/tcp # ssl docker port
+
+  # Docker Nginx Letsencrypt webproxy setup
+  - git clone https://github.com/ecoinomist/docker-letsencrypt-nginx-proxy /home/<user>/app/webproxy
+  - cd /home/<user>/app/webproxy && sudo cp .env.sample .env
+  - docker network create webproxy
+  # Ensure the proxy is always running on reboot or crash
+  - echo 'cd /home/<user>/app/webproxy && docker-compose up -d && cd /' | sudo tee --append /startup.sh
+
+  # Firewall activation
+  - sudo ufw allow <SSH_PORT>/tcp
+  - sudo ufw allow 80/tcp
+  - sudo ufw allow 443/tcp
+  - sudo ufw --force enable
+
+  # Restart to enable firewall
+  - shutdown -r now

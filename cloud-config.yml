@@ -152,12 +152,14 @@ runcmd:
 #  - sudo ufw allow 2375/tcp # default docker port
 #  - sudo ufw allow 2376/tcp # ssl docker port
 
-  # Docker Nginx Letsencrypt webproxy setup
+  # Webproxy Docker Nginx Letsencrypt setup
   - git clone https://github.com/ecoinomist/docker-letsencrypt-nginx-proxy /home/<user>/app/webproxy
   - cd /home/<user>/app/webproxy && sudo cp .env.sample .env
-  - docker network create webproxy
+  # Create Error Pages to hide Nginx version
+  - cd /home/<user>/app/webproxy && sudo mkdir error && cd error && sudo touch {400..405}.html && sudo touch 5xx.html
   # Ensure the proxy is always running on reboot or crash
   - echo 'cd /home/<user>/app/webproxy && docker-compose up -d' | sudo tee --append /startup.sh
+  - docker network create webproxy
 
   # Firewall activation
   - sudo ufw allow <SSH_PORT>/tcp

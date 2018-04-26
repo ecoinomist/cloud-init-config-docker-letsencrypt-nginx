@@ -154,7 +154,7 @@ runcmd:
 
   # Webproxy Docker Nginx Letsencrypt setup
   - git clone https://github.com/ecoinomist/docker-letsencrypt-nginx-proxy /home/<user>/app/webproxy
-  - cd /home/<user>/app/webproxy && sudo cp .env.sample .env
+  - cd /home/<user>/app/webproxy && sudo cp .env.example .env
   # Create Error Pages to hide Nginx version
   - cd /home/<user>/app/webproxy && sudo mkdir error && cd error && sudo touch {400..405}.html && sudo touch 5xx.html
   # Ensure the proxy is always running on reboot or crash
